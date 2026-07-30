@@ -15,4 +15,6 @@ interface SessionRepository
     public function findById(SessionId $id): ?Session;
 
     public function existsForExperienceOnDate(ExperienceId $experienceId, \DateTimeImmutable $date): bool;
+
+    public function byIdWithLock(SessionId $id): ?Session;
 }

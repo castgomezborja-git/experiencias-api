@@ -69,4 +69,11 @@ final class Session
 
         return new self($id, $experienceId, $date, $maxCapacity, $price);
     }
+
+    public function canBeCancelledAt(\DateTimeImmutable $now): bool
+    {
+        $hoursUntilStart = ($this->date->getTimestamp() - $now->getTimestamp()) / 3600;
+
+        return $hoursUntilStart >= 24;
+    }
 }

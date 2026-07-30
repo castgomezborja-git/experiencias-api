@@ -9,6 +9,7 @@ use App\Experience\Domain\Model\ValueObject\SessionId;
 use App\Experience\Domain\Model\ValueObject\ExperienceId;
 use App\Experience\Domain\Repository\SessionRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\DBAL\LockMode;
 
 final class DoctrineSessionRepository implements SessionRepository
 {
@@ -45,5 +46,19 @@ final class DoctrineSessionRepository implements SessionRepository
             ->getSingleScalarResult();
 
         return $count > 0;
+    }
+
+    public function byIdWithLock(SessionId $id): ?Session
+    {
+        return $this->entityManager->find(
+            Session::class,
+            $id,
+            LockMode::PESSIMISTIC_WRITE,
+        );
+    }
+
+    public function byId(SessionId $id): ?Session
+    {
+        return $this->entityManager->find(Session::class, $id);
     }
 }

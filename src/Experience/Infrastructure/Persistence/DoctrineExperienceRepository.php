@@ -24,6 +24,6 @@ final class DoctrineExperienceRepository implements ExperienceRepository
 
     public function findById(ExperienceId $id): ?Experience
     {
-        return $this->entityManager->find(Experience::class, $id->getValue());
+        return $this->entityManager->find(Experience::class, $id);
     }
 }

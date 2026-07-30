@@ -5,6 +5,8 @@ doctrine:
             experience_id: App\Experience\Infrastructure\Persistence\Type\ExperienceIdType
             provider_id: App\Experience\Infrastructure\Persistence\Type\ProviderIdType
             session_id: App\Experience\Infrastructure\Persistence\Type\SessionIdType
+            reservation_id: App\Reservation\Infrastructure\Persistence\Type\ReservationIdType
+            user_id: App\Reservation\Infrastructure\Persistence\Type\UserIdType
     orm:
         auto_mapping: false
         validate_xml_mapping: true
