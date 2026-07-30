@@ -4,6 +4,7 @@ doctrine:
         types:
             experience_id: App\Experience\Infrastructure\Persistence\Type\ExperienceIdType
             provider_id: App\Experience\Infrastructure\Persistence\Type\ProviderIdType
+            session_id: App\Experience\Infrastructure\Persistence\Type\SessionIdType
     orm:
         auto_mapping: false
         validate_xml_mapping: true

@@ -24,3 +24,6 @@ services:
 
     App\Experience\Domain\Repository\ExperienceRepository:
         alias: App\Experience\Infrastructure\Persistence\DoctrineExperienceRepository
+
+    App\Experience\Domain\Repository\SessionRepository:
+        alias: App\Experience\Infrastructure\Persistence\DoctrineSessionRepository
