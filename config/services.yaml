@@ -21,3 +21,6 @@ services:
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
+
+    App\Experience\Domain\Repository\ExperienceRepository:
+        alias: App\Experience\Infrastructure\Persistence\DoctrineExperienceRepository
