@@ -26,7 +26,7 @@ final class DoctrineSessionRepository implements SessionRepository
 
     public function findById(SessionId $id): ?Session
     {
-        return $this->entityManager->find(Session::class, $id->getValue());
+        return $this->entityManager->find(Session::class, $id);
     }
 
     public function existsForExperienceOnDate(ExperienceId $experienceId, \DateTimeImmutable $date): bool

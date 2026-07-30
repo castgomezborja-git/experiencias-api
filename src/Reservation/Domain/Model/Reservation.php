@@ -8,6 +8,7 @@ use App\Experience\Domain\Model\ValueObject\SessionId;
 use App\Reservation\Domain\Model\ValueObject\ReservationId;
 use App\Reservation\Domain\Model\ValueObject\ReservationStatus;
 use App\Reservation\Domain\Model\ValueObject\UserId;
+use App\Reservation\Domain\Exception\ReservationAlreadyCancelledException;
 
 final class Reservation
 {
@@ -36,13 +37,13 @@ final class Reservation
     }
 
     public function cancel(): void
-    {
-        if ($this->status === ReservationStatus::CANCELLED) {
-            throw new \DomainException('Reservation is already canceled');
-        }
-
-        $this->status = ReservationStatus::CANCELLED;
+{
+    if ($this->status === ReservationStatus::CANCELLED) {
+        throw new ReservationAlreadyCancelledException('Reservation is already cancelled');
     }
+
+    $this->status = ReservationStatus::CANCELLED;
+}
 
     public function isCancelled(): bool
     {
