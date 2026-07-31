@@ -38,24 +38,27 @@ php bin/console doctrine:migrations:migrate --env=test --no-interaction
 php bin/phpunit
 ```
 
+### Colección Postman
+
+Se incluye `Experiencias-API.postman_collection.json` en la raíz del proyecto con los 4 endpoints, encadenando automáticamente los IDs entre peticiones (experiencia → sesión → reserva) mediante scripts de test. Incluye además casos que verifican las reglas de negocio clave: sesión duplicada (409), aforo insuficiente (409) y doble cancelación (409).
+
+
 ## Arquitectura
 
 El proyecto está organizado por **subdominios** (bounded contexts), no por capa técnica, siguiendo arquitectura hexagonal en cada uno:
 
+```
 src/
-    Experience/ → gestión de experiencias y sesiones
-        Domain/ → entidades, value objects, interfaces de repositorio (puertos)
-        Application/ → casos de uso, DTOs
-        Infrastructure/ → implementaciones Doctrine, tipos custom
-        Presentation/ → controladores HTTP
-    Reservation/ → gestión de reservas
-        Domain/ 
-        Application/ 
-        Infrastructure/ 
-        Presentation/
-    Shared/
-        Domain/
-        ValueObject/ → value objects genéricos reutilizables entre contextos
+  Experience/       → gestión de experiencias y sesiones
+    Domain/         → entidades, value objects, interfaces de repositorio (puertos)
+    Application/    → casos de uso, DTOs
+    Infrastructure/ → implementaciones Doctrine, tipos custom
+    Presentation/   → controladores HTTP
+  Reservation/      → gestión de reservas
+    Domain/ Application/ Infrastructure/ Presentation/
+  Shared/
+    Domain/ValueObject/  → value objects genéricos reutilizables entre contextos
+```
 
 El dominio (`Domain/`) no depende de Symfony ni de Doctrine en ningún punto — las interfaces de repositorio son puertos definidos en el dominio, implementados en `Infrastructure/`.
 
@@ -100,6 +103,15 @@ Se define un puerto `NotificationSender` en el dominio de `Reservation`, impleme
 - No se puede cancelar una reserva menos de 24h antes del inicio de la sesión.
 - No se puede cancelar una reserva ya cancelada.
 - El precio total de la reserva se calcula en servidor (plazas × precio de sesión), nunca se confía en un valor recibido del cliente.
+
+## Tests
+
+15 tests entre unitarios (dominio) y funcionales (HTTP end-to-end), cubriendo las reglas de negocio críticas:
+
+- **Unitarios** (`Session`, `Reservation`): fechas pasadas, aforo inválido, ventana de cancelación de 24h, guard de doble cancelación.
+- **Funcionales**: aforo respetado bajo el flujo real de la API (el test más representativo de la prueba), sesión duplicada el mismo día, sesión en fecha pasada, cancelación dentro y fuera de plazo, doble cancelación.
+
+Un test queda marcado como `skipped` de forma consciente: "reservar sesión ya iniciada" no se prueba a nivel funcional porque `Session::schedule()` prohíbe crear sesiones en el pasado por diseño — forzar el escenario requeriría datos artificiales que comprometerían la validez del test. La regla equivalente sí está cubierta a nivel unitario (`SessionTest::test_has_started_returns_true_for_past_session`).
 
 ## Endpoints
 

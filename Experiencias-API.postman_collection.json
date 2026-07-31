@@ -1,0 +1,181 @@
+{
+  "info": {
+    "name": "Experiencias API",
+    "description": "Colección para probar la API de gestión de reservas de experiencias. Los endpoints están pensados para ejecutarse en orden: Crear experiencia -> Crear sesión -> Reservar -> Cancelar. Las variables {{experienceId}}, {{sessionId}} y {{reservationId}} se rellenan automáticamente con scripts de test tras cada petición.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://127.0.0.1:8000" },
+    { "key": "experienceId", "value": "" },
+    { "key": "sessionId", "value": "" },
+    { "key": "reservationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Registrar experiencia",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const body = pm.response.json();",
+              "    pm.collectionVariables.set('experienceId', body.experienceId);",
+              "    pm.test('Experience created', () => pm.expect(body.experienceId).to.be.a('string'));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Cata de vinos\",\n  \"description\": \"Una experiencia enologica\",\n  \"providerId\": \"provider-123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/experiences",
+          "host": ["{{baseUrl}}"],
+          "path": ["experiences"]
+        },
+        "description": "Registra una nueva experiencia. No requiere que exista el proveedor previamente (id inventado)."
+      }
+    },
+    {
+      "name": "2. Crear sesión",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const body = pm.response.json();",
+              "    pm.collectionVariables.set('sessionId', body.sessionId);",
+              "    pm.test('Session created', () => pm.expect(body.sessionId).to.be.a('string'));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"experienceId\": \"{{experienceId}}\",\n  \"date\": \"2026-09-15\",\n  \"maxCapacity\": 5,\n  \"price\": 2500\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/sessions",
+          "host": ["{{baseUrl}}"],
+          "path": ["sessions"]
+        },
+        "description": "Crea una sesión para la experiencia creada en el paso 1. price en céntimos (2500 = 25,00€)."
+      }
+    },
+    {
+      "name": "2b. Crear sesión duplicada (mismo día) -> 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"experienceId\": \"{{experienceId}}\",\n  \"date\": \"2026-09-15\",\n  \"maxCapacity\": 5,\n  \"price\": 1000\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/sessions",
+          "host": ["{{baseUrl}}"],
+          "path": ["sessions"]
+        },
+        "description": "Ejecutar DESPUÉS del paso 2, con la misma experiencia y fecha. Debe devolver 409 Conflict."
+      }
+    },
+    {
+      "name": "3. Reservar plazas",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "    const body = pm.response.json();",
+              "    pm.collectionVariables.set('reservationId', body.reservationId);",
+              "    pm.test('Reservation created', () => pm.expect(body.reservationId).to.be.a('string'));",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"userId\": \"user-abc\",\n  \"seats\": 3\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/reservations",
+          "host": ["{{baseUrl}}"],
+          "path": ["reservations"]
+        },
+        "description": "Reserva 3 de las 5 plazas disponibles de la sesión."
+      }
+    },
+    {
+      "name": "3b. Reservar más plazas de las disponibles -> 409",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sessionId\": \"{{sessionId}}\",\n  \"userId\": \"user-xyz\",\n  \"seats\": 10\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/reservations",
+          "host": ["{{baseUrl}}"],
+          "path": ["reservations"]
+        },
+        "description": "Solo quedan 2 plazas libres tras el paso 3 (5 - 3). Pedir 10 debe devolver 409 (aforo insuficiente)."
+      }
+    },
+    {
+      "name": "4. Cancelar reserva",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reservations/{{reservationId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["reservations", "{{reservationId}}", "cancel"]
+        },
+        "description": "Cancela la reserva creada en el paso 3. Debe devolver 204 No Content."
+      }
+    },
+    {
+      "name": "4b. Cancelar reserva ya cancelada -> 409",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/reservations/{{reservationId}}/cancel",
+          "host": ["{{baseUrl}}"],
+          "path": ["reservations", "{{reservationId}}", "cancel"]
+        },
+        "description": "Ejecutar DESPUÉS del paso 4. Debe devolver 409 (ya estaba cancelada)."
+      }
+    }
+  ]
+}
