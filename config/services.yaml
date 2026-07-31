@@ -30,3 +30,6 @@ services:
 
     App\Reservation\Domain\Repository\ReservationRepository:
         alias: App\Reservation\Infrastructure\Persistence\DoctrineReservationRepository
+
+    App\Reservation\Domain\Notification\NotificationSender:
+        alias: App\Reservation\Infrastructure\Notification\LoggerNotificationSender

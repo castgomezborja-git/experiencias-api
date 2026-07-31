@@ -10,12 +10,14 @@ use App\Reservation\Domain\Exception\CancellationWindowExpiredException;
 use App\Reservation\Domain\Model\Reservation;
 use App\Reservation\Domain\Model\ValueObject\ReservationId;
 use App\Reservation\Domain\Repository\ReservationRepository;
+use App\Reservation\Domain\Notification\NotificationSender;
 
 final class CancelReservationUseCase
 {
     public function __construct(
         private readonly ReservationRepository $reservationRepository,
-        private readonly SessionRepository $sessionRepository
+        private readonly SessionRepository $sessionRepository,
+        private readonly NotificationSender $notificationSender,
     ) {
     }
 
@@ -43,6 +45,8 @@ final class CancelReservationUseCase
         $reservation->cancel();
 
         $this->reservationRepository->save($reservation);
+
+        $this->notificationSender->sendReservationCancelled($reservation->getUserId()->getValue(), $reservation->getId()->getValue());
 
         return $reservation;
     }

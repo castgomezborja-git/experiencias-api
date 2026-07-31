@@ -13,6 +13,7 @@ use App\Experience\Domain\Repository\SessionRepository;
 use App\Reservation\Application\DTO\CreateReservationCommand;
 use App\Reservation\Domain\Exception\SessionFullyBookedException;
 use App\Reservation\Domain\Exception\SessionAlreadyStartedException;
+use App\Reservation\Domain\Notification\NotificationSender;
 use Doctrine\ORM\EntityManagerInterface;
 
 final class CreateReservationUseCase
@@ -21,6 +22,7 @@ final class CreateReservationUseCase
         private readonly SessionRepository $sessionRepository,
         private readonly ReservationRepository $reservationRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly NotificationSender $notificationSender,
     ) {
     }
 
@@ -56,6 +58,8 @@ final class CreateReservationUseCase
             );
 
             $this->reservationRepository->save($reservation);
+
+            $this->notificationSender->sendReservationConfirmed($command->userId, $reservation->getId()->getValue());
 
             $this->entityManager->commit();
         } catch (\Throwable $e) {
